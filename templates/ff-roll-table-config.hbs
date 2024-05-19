@@ -1,0 +1,140 @@
+<!-- ff-roll-table-config.hbs -->
+
+<form class="{{cssClass}}" autocomplete="off">
+    <header class="sheet-header flexrow">
+        <img src="{{data.img}}" data-edit="img" title="{{data.name}}" height="64" width="64"/>
+        <h1 class="name">
+            <input type="text" name="name" value="{{data.name}}" placeholder="{{localize 'Name'}}"/>
+        </h1>
+    </header>
+
+    <div class="form-group stacked">
+        <label>{{ localize "TABLE.Description" }}</label>
+        {{editor descriptionHTML target="description" button=false editable=editable engine="prosemirror" collaborate=false}}
+    </div>
+
+    <div class="form-group">
+        <label>{{ localize "TABLE.Formula" }}</label>
+        <input type="text" name="formula" value="{{data.formula}}" placeholder="{{localize 'Roll Formula'}}"/>
+    </div>
+
+    <div class="form-group">
+        <label>{{ localize "TABLE.Replacement" }}</label>
+        <input type="checkbox" name="replacement" {{checked data.replacement}}/>
+    </div>
+
+    <div class="form-group">
+        <label>{{ localize "TABLE.DisplayRoll" }}</label>
+        <input type="checkbox" name="displayRoll" {{checked data.displayRoll}}/>
+    </div>
+
+    <section class="results">
+        <table class="table-results">
+            <thead>
+                <tr class="table-result table-header flexrow">
+                    <th class="result-image">
+                        <a class="create-result" title="{{ localize "TABLE.ResultCreate" }}">
+                            <i class="fas fa-plus"> </i>
+                        </a>
+                    </th>
+                    <th class="result-type">{{ localize "TABLE.ResultType" }}</th>
+                    <th class="result-details">{{ localize "TABLE.ResultDetails" }}</th>
+                    <th class="result-weight">{{ localize "TABLE.ResultWeight" }}</th>
+                    <th class="result-range">{{ localize "TABLE.ResultRange" }}</th>
+                    {{#if owner}}
+                    <th class="result-controls">
+                        <a class="normalize-results" title="{{ localize "TABLE.Normalize" }}">
+                            <i class="fas fa-balance-scale"></i>
+                        </a>
+                    </th>
+                    {{/if}}
+                </tr>
+            </thead>
+            <tbody>                
+                {{#each results as |result i|}}
+                <tr class="table-result flexrow {{#if result.drawn}}drawn{{/if}}" data-result-id="{{result._id}}">
+                    <input type="hidden" name="results.{{i}}._id" value="{{result._id}}"/>
+
+                    <td class="result-image">
+                        <img src="{{result.img}}" data-edit="results.{{i}}.img" width="32" height="32"/>
+                    </td>
+
+                    <td class="result-type">
+                    <select name="results.{{i}}.type" data-dtype="Number">
+                        {{#select result.type}}
+                        {{#each ../resultTypes as |title type|}}
+                        <option value="{{type}}">{{title}}</option>
+                        {{/each}}
+                        {{/select}}
+                    </select>
+                    </td>
+                    
+                    <td class="result-details">
+                         <input type="hidden" name="results.{{i}}.documentId" value="{{result.documentId}}"/>
+
+                         {{#if result.isText}}
+                            <input type="text" name="results.{{i}}.text" value="{{result.text}}" placeholder="{{localize 'TABLE.ResultDescription'}}"/>
+                            <input type="hidden" name="results.{{i}}.flags.fatesFolly.managed" value="true"/>
+                            <input type="hidden" name="results.{{i}}.flags.fatesFolly.resultType" value="text"/>
+                            <select name="results.{{i}}.flags.fatesFolly.damageProcess">
+                                <option value="none" {{#if (eq result.flags.fatesFolly.damageProcess "none")}}selected{{/if}}>None</option>
+                                <option value="max-dice" {{#if (eq result.flags.fatesFolly.damageProcess "max-dice")}}selected{{/if}}>Max Dice</option>
+                                <option value="double-dice" {{#if (eq result.flags.fatesFolly.damageProcess "double-dice")}}selected{{/if}}>Double Dice</option>
+                                <option value="max-double-dice" {{#if (eq result.flags.fatesFolly.damageProcess "max-double-dice")}}selected{{/if}}>Max Double Dice</option>
+                                <option value="max-triple-dice" {{#if (eq result.flags.fatesFolly.damageProcess "max-triple-dice")}}selected{{/if}}>Max Triple Dice</option>
+                                <option value="max-quadruple-dice" {{#if (eq result.flags.fatesFolly.damageProcess "max-quadruple-dice")}}selected{{/if}}>Max Quadruple Dice</option>
+                                <option value="weapon" {{#if (eq result.flags.fatesFolly.damageProcess "weapon")}}selected{{/if}}>Weapon Damage</option>
+                                <option value="half-weapon" {{#if (eq result.flags.fatesFolly.damageProcess "half-weapon")}}selected{{/if}}>Half Weapon Damage</option>
+                                <option value="double-weapon" {{#if (eq result.flags.fatesFolly.damageProcess "double-weapon")}}selected{{/if}}>Double Weapon Damage</option>
+                            </select><label><input type="checkbox" name="results.{{i}}.flags.fatesFolly.attacker" {{checked result.flags.fatesFolly.attacker}} class="checkbox">Attacker</label>
+                            <label><input type="checkbox" name="results.{{i}}.flags.fatesFolly.target" {{checked result.flags.fatesFolly.target}} class="checkbox">Target</label>
+                         {{else if result.isDocument}}
+                            <select name="results.{{i}}.documentCollection">
+                                <option value="Item">Item</option>
+                            </select>
+                            <input class="result-target" name="results.{{i}}.text" type="text" value="{{result.text}}"/>
+                            <input type="text" name="results.{{i}}.flags.fatesFolly.duration" value="{{result.flags.fatesFolly.duration}}" placeholder="Duration" style="width: 40%;" class="text-input">
+                            <label><input type="checkbox" name="results.{{i}}.flags.fatesFolly.attacker" {{checked result.flags.fatesFolly.attacker}} class="checkbox">Attacker</label>
+                            <label><input type="checkbox" name="results.{{i}}.flags.fatesFolly.target" {{checked result.flags.fatesFolly.target}} class="checkbox">Target</label>
+                            <input type="hidden" name="results.{{i}}.flags.fatesFolly.damageProcess" value="none"/>
+                            <input type="hidden" name="results.{{i}}.flags.fatesFolly.managed" value="true"/>
+                            <input type="hidden" name="results.{{i}}.flags.fatesFolly.resultType" value="item"/>
+                        {{/if}}
+                    </td>
+
+                    <td class="result-weight">
+                    <input type="text" name="results.{{i}}.weight" value="{{result.weight}}" placeholder="1" data-dtype="Number"/>
+                </td>
+
+                <td class="result-range">
+                    <input type="text" name="results.{{i}}.rangeL" value="{{result.range.[0]}}" placeholder="L" data-dtype="Number"/>
+                    <span> - </span>
+                    <input type="text" name="results.{{i}}.rangeH" value="{{result.range.[1]}}" placeholder="H" data-dtype="Number"/>
+                </td>
+
+                {{#if ../owner}}
+                <td class="result-controls">
+                    <a class="lock-result" title="{{ localize "TABLE.ToggleDrawn" }}">
+                        <i class="fas {{#if result.drawn}}fa-lock{{else}}fa-unlock{{/if}} fa-fw"></i>
+                    </a>
+                    <input type="hidden" name="results.{{i}}.drawn" value="{{result.drawn}}" data-dtype="Boolean"/>
+                    <a class="delete-result" title="{{ localize "TABLE.ResultDelete" }}">
+                        <i class="fas fa-trash fa-fw"></i>
+                    </a>
+                </td>
+                {{/if}}
+            </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </section>
+
+    <!-- Roll Table Footer -->
+    <footer class="sheet-footer flexrow">
+        {{#if owner}}
+        <button class="submit" type="submit"><i class="fas fa-save"></i> {{ localize "TABLE.Update" }}</button>
+        <button class="reset" type="button"><i class="fas fa-undo"></i> {{ localize "TABLE.Reset" }}</button>
+        {{/if}}
+        <button class="roll" type="button"><i class="fas fa-dice-d20"></i> {{ localize "TABLE.Roll" }}</button>
+    </footer>
+</form>

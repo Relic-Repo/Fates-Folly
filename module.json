@@ -1,0 +1,85 @@
+{
+  "id": "fates-folly",
+  "title": "Fate's Folly",
+  "version": "1.2",
+  "compatibility": {
+    "minimum": "11",
+    "verified": "11"
+  },
+  "relationships": {
+    "requires": [
+      {
+        "id": "midi-qol",
+        "type": "module",
+        "compatibility": {}
+      },
+      {
+        "id": "dae",
+        "type": "module",
+        "compatibility": {}
+      }
+    ],
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {}
+      }
+    ]
+  },
+  "description": "Fate's Folly: Enhanced Critical and Fumble Dynamics\n\nElevate your tabletop RPG sessions with \"Fate's Folly,\" a dynamic Foundry VTT module designed to bring depth and nuance to critical hits and fumbles. This module intricately weaves the tapestry of fate into every roll, transforming critical successes and failures into pivotal moments that resonate with thrilling narratives and unexpected outcomes.",
+  "authors": [
+    {
+      "name": "Relic",
+      "discord": "Relic",
+      "email": "",
+      "flags": {}
+    }
+  ],
+  "url": "https://github.com/Relic-Repo/Fates-Folly",
+  "esmodules": [   
+    "scripts/FFRollTableConfig.js",
+    "scripts/FatesFolly.js",
+    "scripts/settings.js",
+    "scripts/hooks.js",
+    "scripts/main.js"
+  ],  
+  "packs": [
+    {
+      "name": "fates-folly-effects",
+      "label": "Fate's Folly Effects",
+      "path": "packs/fates-folly-effects",
+      "type": "Item",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },
+    {
+      "name": "fates-folly-macros",
+      "label": "Fate's Folly Macros",
+      "path": "packs/fates-folly-macros",
+      "type": "Macro",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    },    
+    {
+      "name": "fates-folly-tables",
+      "label": "Fate's Folly Tables",
+      "path": "packs/fates-folly-tables",
+      "type": "RollTable",
+      "ownership": {
+        "PLAYER": "OBSERVER",
+        "ASSISTANT": "OWNER"
+      },
+      "system": "dnd5e",
+      "flags": {}
+    }
+  ]
+}
