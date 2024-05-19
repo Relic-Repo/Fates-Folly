@@ -1,7 +1,12 @@
-// hooks.js
+// hooks.js for "Fate's Folly"
 
 import { FatesFolly } from "./FatesFolly.js";
 
+/**
+ * Handles the completion of a roll workflow.
+ * 
+ * @param {Object} workflow - The roll workflow object.
+ */
 async function handleRollComplete(workflow) {
     console.log("%cFate\'s Folly RollComplete Hook \n **** The Beginning ****", `
         color:#D01B00;
@@ -17,6 +22,9 @@ async function handleRollComplete(workflow) {
     }
 }
 
+/**
+ * Sets up hooks for Fate's Folly.
+ */
 export function setupHooks() {
     console.log("%cFate\'s Folly RollComplete Set", `
         color:#D01B00;
@@ -28,6 +36,9 @@ export function setupHooks() {
     Hooks.on("midi-qol.RollComplete", handleRollComplete);
 }
 
+/**
+ * Removes custom hooks for Fate's Folly.
+ */
 export function removeCustomHooks() {
     console.log("%cFate\'s Folly RollComplete Un-Set", `
         color:#D01B00;
@@ -38,5 +49,3 @@ export function removeCustomHooks() {
     `);
     Hooks.off("midi-qol.RollComplete", handleRollComplete);
 }
-
-

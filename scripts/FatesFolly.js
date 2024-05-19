@@ -1,6 +1,11 @@
-// FatesFolly
+// FatesFolly.js for "Fate's Folly"
 
 export class FatesFolly {
+    /**
+     * Constructs an instance of FatesFolly, initializes properties, and sets up event listeners.
+     * 
+     * @param {Object} rollWorkflow - The workflow object related to the roll process.
+     */
     constructor(rollWorkflow) {
         this.rollWorkflow = rollWorkflow;
         this.resultDataMap = new Map();
@@ -8,6 +13,13 @@ export class FatesFolly {
         this.processDrawTypes();
     }
 
+    /**
+     * Logs debug messages to the console if debugging is enabled in the module settings.
+     * 
+     * @param {string} message - The debug message to log.
+     * @param {string} style - The CSS styling to apply to the message.
+     * @param {any} [additionalData=null] - Optional additional data to log.
+     */
     debugLog(message, style = "", additionalData = null) {
         const enableDebug = game.settings.get("fates-folly", "enableDebug");
         if (enableDebug) {
@@ -18,6 +30,9 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Processes the draw types and maps them to corresponding functions.
+     */
     processDrawTypes() {
         this.drawingFunctionsMap = new Map([
             ['weapon', new Map([
@@ -47,6 +62,13 @@ export class FatesFolly {
         ]);
     }
 
+    /**
+     * Processes the roll and decides whether to handle it as a critical or fumble based on settings.
+     * 
+     * @param {boolean} isCritical - Indicates if the roll is a critical hit.
+     * @param {string} attackType - The type of attack (e.g., weapon, spell).
+     * @param {string} damageType - The type of damage (e.g., Piercing, Fire).
+     */
     processRoll(isCritical, attackType, damageType) {
         try {
             const enableCriticals = game.settings.get("fates-folly", "enableCriticals");
@@ -95,7 +117,13 @@ export class FatesFolly {
             ui.notifications.error(`Error processing roll: ${error.message}`);
         }
     }
-    
+
+    /**
+     * Processes a critical hit based on the attack and damage types.
+     * 
+     * @param {string} attackType - The type of attack (e.g., weapon, spell).
+     * @param {string} damageType - The type of damage (e.g., Piercing, Fire).
+     */
     processCritical(attackType, damageType) {
         try {
             const typeMap = this.drawingFunctionsMap.get(attackType);
@@ -117,7 +145,12 @@ export class FatesFolly {
         }
     }
 
-    
+    /**
+     * Processes a fumble based on the attack and damage types.
+     * 
+     * @param {string} attackType - The type of attack (e.g., weapon, spell).
+     * @param {string} damageType - The type of damage (e.g., Piercing, Fire).
+     */
     processFumble(attackType, damageType) {
         try {
             const typeMap = this.drawingFunctionsMap.get(attackType);
@@ -137,8 +170,14 @@ export class FatesFolly {
         } catch (error) {
             console.error(`Error processing fumble for ${attackType}/${damageType}:`, error);
         }
-    }    
+    }
 
+    /**
+     * Handles the application of effects based on the result data.
+     * 
+     * @param {Object} resultData - The data related to the results of the roll.
+     * @param {boolean} isCritical - Indicates if the roll is a critical hit.
+     */
     async handleEffect(resultData, isCritical) {
         this.debugLog(`HandleEffect called with isCritical = ${isCritical}`, `
             color: #D01B00;
@@ -149,21 +188,21 @@ export class FatesFolly {
         `, resultData);
         try {
             const targetsArray = Array.from(this.rollWorkflow.targets);
-            const targetToken = targetsArray.length > 0 ? targetsArray[0] : null;    
+            const targetToken = targetsArray.length > 0 ? targetsArray[0] : null;
             const attackerToken = this.getTokenFromWorkflow('attackingToken');
-    
+
             if (!attackerToken || !targetToken) {
                 console.error("Required tokens are not available.");
                 return;
-            }    
+            }
             const baseDamageFormula = isCritical ?
                 (Array.isArray(this.rollWorkflow.damageRolls) && this.rollWorkflow.damageRolls.length > 0 ?
-                this.rollWorkflow.damageRolls[0]._formula : this.extractDamageFormula()) :
-                this.extractDamageFormula();    
+                    this.rollWorkflow.damageRolls[0]._formula : this.extractDamageFormula()) :
+                this.extractDamageFormula();
             for (const resultEntry of resultData) {
                 try {
                     const { documentId: itemId, flags: { fatesFolly } } = resultEntry;
-                    const { duration: rawDuration, attacker: attackerApplies, target: targetApplies, resultType, damageProcess } = fatesFolly;    
+                    const { duration: rawDuration, attacker: attackerApplies, target: targetApplies, resultType, damageProcess } = fatesFolly;
                     let damageAmount = await this.calculateEffect(damageProcess, baseDamageFormula, isCritical);
                     if (resultType === 'text') {
                         this.applyEffectsToTokens(damageAmount, attackerApplies ? attackerToken : null, targetApplies ? targetToken : null);
@@ -178,8 +217,14 @@ export class FatesFolly {
             console.error("Error in handleEffect:", error);
             ui.notifications.error(`Failed handleEffect: ${error.message}`);
         }
-    } 
-    
+    }
+
+    /**
+     * Retrieves the appropriate effect function based on the damage process type.
+     * 
+     * @param {string} damageProcess - The type of damage process.
+     * @returns {Function} The effect function.
+     */
     getEffect(damageProcess) {
         const effectMap = new Map([
             ["none", async () => 0],
@@ -195,6 +240,12 @@ export class FatesFolly {
         return effectMap.get(damageProcess) || (async () => 0);
     }
 
+    /**
+     * Converts the raw duration string into a duration object.
+     * 
+     * @param {string} rawDuration - The raw duration string.
+     * @returns {Object} The converted duration object.
+     */
     convertDuration(rawDuration) {
         this.debugLog(`Converting rawDuration: ${rawDuration}`, `
             color: #D01B00;
@@ -206,10 +257,10 @@ export class FatesFolly {
         if (typeof rawDuration !== 'string') {
             console.error("Invalid rawDuration:", rawDuration);
             return {};
-        }        
+        }
         if (rawDuration.toLowerCase() === 'manual' || rawDuration.toLowerCase() === 'none') {
             return { seconds: 99999 };
-        }    
+        }
         const timePatterns = {
             days: { regex: /\b(\d+)\s*days?\b/i, multiplier: 86400 },
             hours: { regex: /\b(\d+)\s*hours?\b/i, multiplier: 3600 },
@@ -217,10 +268,10 @@ export class FatesFolly {
             seconds: { regex: /\b(\d+)\s*seconds?\b/i, multiplier: 1 },
             rounds: { regex: /\b(\d+)\s*rounds?\b/i },
             turns: { regex: /\b(\d+)\s*turns?\b/i },
-        };    
+        };
         let duration = {};
-        let specialUnitsSet = false;    
-        Object.entries(timePatterns).forEach(([unit, {regex, multiplier}]) => {
+        let specialUnitsSet = false;
+        Object.entries(timePatterns).forEach(([unit, { regex, multiplier }]) => {
             const match = rawDuration.match(regex);
             if (match) {
                 const value = parseInt(match[1], 10);
@@ -234,7 +285,7 @@ export class FatesFolly {
         });
         if (specialUnitsSet && 'seconds' in duration) {
             delete duration.seconds;
-        }    
+        }
         this.debugLog(`Converted Duration:`, `
             color: #D01B00;
             background-color: #A3A6B4;
@@ -244,8 +295,14 @@ export class FatesFolly {
         `, duration);
 
         return duration;
-    }    
+    }
 
+    /**
+     * Finds table results based on the provided result data IDs.
+     * 
+     * @param {Array} resultDataIds - The IDs of the result data.
+     * @returns {Array} The found table results.
+     */
     findTableResults(resultDataIds) {
         const results = [];
         for (let id of resultDataIds) {
@@ -263,6 +320,12 @@ export class FatesFolly {
         return results;
     }
 
+    /**
+     * Listens for the rendering of chat messages and extracts table results.
+     * 
+     * @param {boolean} isCritical - Indicates if the roll is a critical hit.
+     * @param {boolean} isFumble - Indicates if the roll is a fumble.
+     */
     tableDrawListener(isCritical, isFumble) {
         Hooks.once("renderChatMessage", async (message) => {
             if (!game.user.isGM) return;
@@ -289,6 +352,12 @@ export class FatesFolly {
         });
     }
 
+    /**
+     * Creates a chat button for applying critical or fumble effects.
+     * 
+     * @param {Array} results - The results data to apply.
+     * @param {boolean} isCritical - Indicates if the roll is a critical hit.
+     */
     createChatButton(results, isCritical) {
         const uniqueId = Date.now().toString(36) + Math.random().toString(36).substr(2);
         this.resultDataMap.set(uniqueId, results);
@@ -314,6 +383,9 @@ export class FatesFolly {
         });
     }
 
+    /**
+     * Initializes event listeners for the Fate's Folly module.
+     */
     initializeEventListeners() {
         $(document).off("click.fatesFolly").on("click.fatesFolly", ".fates-folly-button", async (event) => {
             event.preventDefault();
@@ -331,6 +403,12 @@ export class FatesFolly {
         });
     }
 
+    /**
+     * Retrieves a token from the roll workflow based on the provided key.
+     * 
+     * @param {string} key - The key to retrieve the token.
+     * @returns {Object|null} The retrieved token or null if not found.
+     */
     getTokenFromWorkflow(key) {
         const keys = key.split('.');
         let currentObject = this.rollWorkflow;
@@ -357,12 +435,25 @@ export class FatesFolly {
             return null;
         }
         return token;
-    }   
+    }
 
+    /**
+     * Extracts the damage formula from the roll workflow.
+     * 
+     * @returns {string} The extracted damage formula.
+     */
     extractDamageFormula() {
         return this.rollWorkflow.item.labels.damage.match(/(\d+d\d+)/)?.[0] || "0";
     }
 
+    /**
+     * Calculates the effect based on the damage process and base damage formula.
+     * 
+     * @param {string} damageProcess - The type of damage process.
+     * @param {string} baseDamageFormula - The base damage formula.
+     * @param {boolean} isCritical - Indicates if the roll is a critical hit.
+     * @returns {Promise<number>} The calculated damage amount.
+     */
     async calculateEffect(damageProcess, baseDamageFormula, isCritical) {
         const effectFn = this.getEffect(damageProcess);
         const preProcessDamage = isCritical ? this.rollWorkflow.damageTotal : 0;
@@ -375,14 +466,19 @@ export class FatesFolly {
             return 0;
         }
     }
-    
 
+    /**
+     * Applies HP adjustments to the given token based on the damage amount.
+     * 
+     * @param {Object} token - The token to adjust HP for.
+     * @param {number} damage - The amount of damage to apply.
+     */
     applyHpAdjustment(token, damage) {
         try {
             const hpPath = "system.attributes.hp.value";
             const tempHpPath = "system.attributes.hp.temp";
             let currentHp = getProperty(token.actor, hpPath);
-            let currentTempHp = getProperty(token.actor, tempHpPath) || 0;    
+            let currentTempHp = getProperty(token.actor, tempHpPath) || 0;
             this.debugLog(`Current HP: ${currentHp}, Current Temp HP: ${currentTempHp}`, `
                 color: #D01B00;
                 background-color: #A3A6B4;
@@ -391,7 +487,7 @@ export class FatesFolly {
                 padding:1pt;
             `);
             let newHp = currentHp;
-            let newTempHp = currentTempHp;    
+            let newTempHp = currentTempHp;
             if (damage > 0) {
                 if (currentTempHp > 0) {
                     const tempHpAfterDamage = Math.max(currentTempHp - Math.round(damage), 0);
@@ -402,7 +498,7 @@ export class FatesFolly {
             } else {
                 const maxHp = getProperty(token.actor, "system.attributes.hp.max");
                 newHp = Math.min(currentHp + Math.abs(Math.round(damage)), maxHp);
-            }    
+            }
             this.debugLog(`New HP: ${newHp}, New Temp HP: ${newTempHp}`, `
                 color: #D01B00;
                 background-color: #A3A6B4;
@@ -418,36 +514,53 @@ export class FatesFolly {
                 font-weight:bold;
                 padding:1pt;
             `);
-    
+
         } catch (error) {
             console.error(`Error applying ${adjustmentType}:`, error);
             ui.notifications.error(`Failed to apply ${adjustmentType}: ${error.message}`);
         }
     }
 
+    /**
+     * Waits for a specified amount of time.
+     * 
+     * @param {number} ms - The number of milliseconds to wait.
+     * @returns {Promise} A promise that resolves after the specified time.
+     */
     async wait(ms) { 
         return new Promise(resolve => { setTimeout(resolve, ms);
         }); 
     }
 
+    /**
+     * Applies effects to the given tokens based on the damage amount.
+     * 
+     * @param {number} damageAmount - The amount of damage to apply.
+     * @param {...Object} tokens - The tokens to apply the effects to.
+     */
     async applyEffectsToTokens(damageAmount, ...tokens) {
         tokens.forEach(async token => {
             if (token) {
-                    this.applyHpAdjustment(token, damageAmount);
-                    await this.wait(500);
-                    this.sendDamageReport(token, damageAmount);                    
-                    this.debugLog(`Effect applied to ${token.name}. Damage Amount: ${damageAmount}`, `
-                        color: #D01B00;
-                        background-color: #A3A6B4;
-                        font-size:9pt;
-                        font-weight:bold;
-                        padding:1pt;
-                    `);
-
+                this.applyHpAdjustment(token, damageAmount);
+                await this.wait(500);
+                this.sendDamageReport(token, damageAmount);
+                this.debugLog(`Effect applied to ${token.name}. Damage Amount: ${damageAmount}`, `
+                    color: #D01B00;
+                    background-color: #A3A6B4;
+                    font-size:9pt;
+                    font-weight:bold;
+                    padding:1pt;
+                `);
             }
         });
     }
 
+    /**
+     * Sends a damage report to the chat.
+     * 
+     * @param {Object} token - The token to report damage for.
+     * @param {number} damage - The amount of damage to report.
+     */
     sendDamageReport(token, damage) {
         const messageContent = `
             <div class="chat-message fates-folly">
@@ -462,6 +575,12 @@ export class FatesFolly {
         });
     }
 
+    /**
+     * Finds an item by its ID or name.
+     * 
+     * @param {string} searchKey - The ID or name of the item to find.
+     * @returns {Promise<Object|null>} The found item or null if not found.
+     */
     async findItem(searchKey) {
         let item = await game.items.get(searchKey);
         if (item) return item;
@@ -469,15 +588,28 @@ export class FatesFolly {
         return item;
     }
 
+    /**
+     * Extracts the actor item UUID from a full UUID string.
+     * 
+     * @param {string} fullUuid - The full UUID string.
+     * @returns {string} The extracted actor item UUID.
+     */
     extractActorItemUuid(fullUuid) {
         const regex = /Actor\.\w+\.Item\.\w+/;
         const match = fullUuid.match(regex);
         return match ? match[0] : "";
-    }  
+    }
 
+    /**
+     * Applies DAE effects based on the raw duration and item UUID.
+     * 
+     * @param {string} rawDuration - The raw duration string.
+     * @param {string} itemUuid - The item UUID.
+     * @returns {Array<Object>} The effects to apply.
+     */
     applyDaeEffect(rawDuration, itemUuid) {
         const itemIdentifier = itemUuid.match(/Item\.\w+/)[0];
-        const truncUuid = this.extractActorItemUuid(itemUuid);    
+        const truncUuid = this.extractActorItemUuid(itemUuid);
         const duration = this.convertDuration(rawDuration);
         return [
             {
@@ -489,7 +621,7 @@ export class FatesFolly {
                     mode: CONST.ACTIVE_EFFECT_MODES.ADD,
                     priority: 20
                 }],
-                icon: 'modules/fates-folly/img/items/remove.png', 
+                icon: 'modules/fates-folly/img/items/remove.png',
                 origin: `Item.${truncUuid}`,
                 duration: {
                     ...duration,
@@ -500,8 +632,15 @@ export class FatesFolly {
                 description: `Fate's Folly Item Remover for ${itemIdentifier}`,
             }
         ];
-    } 
-   
+    }
+
+    /**
+     * Applies items to the given tokens based on the item ID and raw duration.
+     * 
+     * @param {string} itemId - The ID of the item to apply.
+     * @param {string} rawDuration - The raw duration string.
+     * @param {...Object} tokens - The tokens to apply the items to.
+     */
     async applyItemsToTokens(itemId, rawDuration, ...tokens) {
         const systemItem = await this.findItem(itemId);
         if (!systemItem) {
@@ -532,6 +671,13 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Applies effects to an item by its ID for the given token.
+     * 
+     * @param {Object} token - The token to apply effects to.
+     * @param {string} itemId - The ID of the item.
+     * @param {Array<Object>} effects - The effects to apply.
+     */
     async applyItemById(token, itemId, effects) {
         const item = token.actor.items.get(itemId);
         if (item) {
@@ -561,8 +707,14 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Calculates the maximum possible damage based on the damage formula.
+     * 
+     * @param {string} damageFormula - The damage formula.
+     * @returns {number} The maximum possible damage.
+     */
     calculateMaxDamage(damageFormula) {
-        try{
+        try {
             const diceRollRegex = /(\d+)d(\d+)/g;
             const numericModifierRegex = /\+\s*(\d+)/g;
             let maxResult = 0;
@@ -578,24 +730,35 @@ export class FatesFolly {
                 maxResult += parseInt(modifier, 10);
             }
             return maxResult;
-        } catch (error){
+        } catch (error) {
             console.error("Error calculateMaxDamage:", error);
             ui.notifications.error(`Failed calculateMaxDamage: ${error.message}`);
         }
     }
 
+    /**
+     * Calculates the double dice damage based on the damage formula.
+     * 
+     * @param {string} damageFormula - The damage formula.
+     * @returns {Promise<number>} The calculated double dice damage.
+     */
     async calculateDoubleDiceDamage(damageFormula) {
-        try{
+        try {
             let roll = new Roll(damageFormula);
             roll.alter(2, 0);
             await roll.evaluate({async: true});
             return roll.total;
-        } catch (error){
+        } catch (error) {
             console.error("Error calculateDoubleDiceDamage:", error);
             ui.notifications.error(`Failed calculateDoubleDiceDamage: ${error.message}`);
         }
     }
 
+    /**
+     * Draws a weapon critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     */
     async drawWeapon(critState) {
         try {
             let tableName = critState ? "Weapon Critical" : "Weapon Fumble";
@@ -610,6 +773,11 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Draws a weapon piercing critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     */
     async drawWeaponPiercing(critState) {
         try {
             let tableName = critState ? "Piercing Critical" : "Piercing Fumble";
@@ -624,6 +792,11 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Draws a weapon slashing critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     */
     async drawWeaponSlashing(critState) {
         try {
             let tableName = critState ? "Slashing Critical" : "Slashing Fumble";
@@ -638,6 +811,11 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Draws a weapon bludgeoning critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     */
     async drawWeaponBludgeoning(critState) {
         try {
             let tableName = critState ? "Bludgeoning Critical" : "Bludgeoning Fumble";
@@ -648,9 +826,16 @@ export class FatesFolly {
             }
             table.draw();
         } catch (error) {
-            console.error("***Error*** \n in drawWeaponSlashing", error);
+            console.error("***Error*** \n in drawWeaponBludgeoning", error);
         }
-    }        
+    }
+
+    /**
+     * Draws a spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpell(critState, fumbState) {
         try {
             let table = null;
@@ -662,7 +847,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpell:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a feat critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawFeat(critState, fumbState) {
         try {
             let table = null;
@@ -675,6 +867,13 @@ export class FatesFolly {
             console.error("****Error**** \n in drawFeat:", error);
         }
     }
+
+    /**
+     * Draws an acid spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellAcid(critState, fumbState) {
         try {
             let table = null;
@@ -686,7 +885,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellAcid:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a cold spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellCold(critState, fumbState) {
         try {
             let table = null;
@@ -698,7 +904,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellCold:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a fire spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellFire(critState, fumbState) {
         try {
             let table = null;
@@ -710,7 +923,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellFire:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a force spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellForce(critState, fumbState) {
         try {
             let table = null;
@@ -722,7 +942,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellForce:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a lightning spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellLightning(critState, fumbState) {
         try {
             let table = null;
@@ -734,7 +961,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellLightning:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a necrotic spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellNecrotic(critState, fumbState) {
         try {
             let table = null;
@@ -746,7 +980,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellNecrotic:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a poison spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellPoison(critState, fumbState) {
         try {
             let table = null;
@@ -758,7 +999,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellPoison:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a psychic spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellPsychic(critState, fumbState) {
         try {
             let table = null;
@@ -770,7 +1018,14 @@ export class FatesFolly {
         } catch (error) {
             console.error("****Error**** \n in drawSpellPsychic:", error);
         }
-    }    
+    }
+
+    /**
+     * Draws a radiant spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
     async drawSpellRadiant(critState, fumbState) {
         try {
             let table = null;
