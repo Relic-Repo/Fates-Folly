@@ -1,6 +1,16 @@
 // hooks.js for "Fate's Folly"
 
 import { FatesFolly } from "./FatesFolly.js";
+import { debugLog } from "./utils.js";
+
+const workflowState = { isWorkflowInProgress: false }; // Use an object to manage the state
+const styling = `
+            color:#D01B00;
+            background-color:#A3A6B4;
+            font-size:9pt;
+            font-weight:bold;
+            padding:1pt;
+        `;
 
 /**
  * Handles the completion of a roll workflow.
@@ -8,17 +18,22 @@ import { FatesFolly } from "./FatesFolly.js";
  * @param {Object} workflow - The roll workflow object.
  */
 async function handleRollComplete(workflow) {
-    console.log("%cFate\'s Folly RollComplete Hook \n **** The Beginning ****", `
-        color:#D01B00;
-        background-color:#A3A6B4;
-        font-size:10pt;
-        font-weight:bold;
-        padding:5pt;
-    `, workflow);
+    if (workflowState.isWorkflowInProgress) {
+        debugLog("Fate\'s Folly RollComplete Hook Ignored \n **** Workflow in Progress ****", styling, workflow);
+        return; 
+    }
+
+    debugLog("Fate\'s Folly RollComplete Hook \n **** The Beginning ****", styling, workflow);
+
+    workflowState.isWorkflowInProgress = true; // Set flag to indicate workflow processing has started
+
+    if (!workflow.isCritical && !workflow.isFumble)
+        workflowState.isWorkflowInProgress = false;
+
     let fatesFolly = new FatesFolly(workflow);
     if (workflow.isCritical || workflow.isFumble) {
-        fatesFolly.tableDrawListener(workflow.isCritical, workflow.isFumble);
-        fatesFolly.processRoll(workflow.isCritical, workflow.item.type, workflow.item.labels.damageTypes);
+        await fatesFolly.tableDrawListener(workflow.isCritical, workflow.isFumble);
+        await fatesFolly.processRoll(workflow.isCritical, workflow.item.type, workflow.item.labels.damageTypes);
     }
 }
 
@@ -26,13 +41,7 @@ async function handleRollComplete(workflow) {
  * Sets up hooks for Fate's Folly.
  */
 export function setupHooks() {
-    console.log("%cFate\'s Folly RollComplete Set", `
-        color:#D01B00;
-        background-color:#A3A6B4;
-        font-size:10pt;
-        font-weight:bold;
-        padding:5pt;
-    `);
+    debugLog("Fate\'s Folly RollComplete Set", styling);
     Hooks.on("midi-qol.RollComplete", handleRollComplete);
 }
 
@@ -40,12 +49,8 @@ export function setupHooks() {
  * Removes custom hooks for Fate's Folly.
  */
 export function removeCustomHooks() {
-    console.log("%cFate\'s Folly RollComplete Un-Set", `
-        color:#D01B00;
-        background-color:#A3A6B4;
-        font-size:10pt;
-        font-weight:bold;
-        padding:5pt;
-    `);
+    debugLog("Fate\'s Folly RollComplete Un-Set", styling);
     Hooks.off("midi-qol.RollComplete", handleRollComplete);
 }
+
+export { workflowState }; // Ensure the state is exported correctly

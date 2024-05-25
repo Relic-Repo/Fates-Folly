@@ -6,15 +6,16 @@ import { setupHooks } from "./hooks.js";
 import { FatesFolly } from "./FatesFolly.js";
 import { registerFatesFollyRollTable } from "./FFRollTableConfig.js";
 
+
 // When the Foundry VTT module is initialized
 Hooks.on("init", () => {
-    // Log a message indicating the initialization process has begun
+    
     console.log("%cFate\'s Folly Init", `
         color:#D01B00;
         background-color:#A3A6B4;
-        font-size:10pt;
+        font-size:9pt;
         font-weight:bold;
-        padding:5pt;
+        padding:1pt;
     `);
 
     // Register module settings

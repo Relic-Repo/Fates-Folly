@@ -1,5 +1,9 @@
 // FatesFolly.js for "Fate's Folly"
 
+
+import { workflowState } from "./hooks.js"; // Import the state
+import { debugLog } from "./utils.js";
+
 export class FatesFolly {
     /**
      * Constructs an instance of FatesFolly, initializes properties, and sets up event listeners.
@@ -7,27 +11,17 @@ export class FatesFolly {
      * @param {Object} rollWorkflow - The workflow object related to the roll process.
      */
     constructor(rollWorkflow) {
+        this.styling = `
+            color:#D01B00;
+            background-color:#A3A6B4;
+            font-size:9pt;
+            font-weight:bold;
+            padding:1pt;
+        `;
         this.rollWorkflow = rollWorkflow;
         this.resultDataMap = new Map();
         this.initializeEventListeners();
         this.processDrawTypes();
-    }
-
-    /**
-     * Logs debug messages to the console if debugging is enabled in the module settings.
-     * 
-     * @param {string} message - The debug message to log.
-     * @param {string} style - The CSS styling to apply to the message.
-     * @param {any} [additionalData=null] - Optional additional data to log.
-     */
-    debugLog(message, style = "", additionalData = null) {
-        const enableDebug = game.settings.get("fates-folly", "enableDebug");
-        if (enableDebug) {
-            console.log(`%c${message}`, style);
-            if (additionalData !== null) {
-                console.log(additionalData);
-            }
-        }
     }
 
     /**
@@ -73,41 +67,17 @@ export class FatesFolly {
         try {
             const enableCriticals = game.settings.get("fates-folly", "enableCriticals");
             const enableFumbles = game.settings.get("fates-folly", "enableFumbles");
-            this.debugLog(`Processing roll: Critical=${isCritical}, AttackType=${attackType}, DamageType=${damageType}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
-            this.debugLog(`Settings -> Criticals Enabled: ${enableCriticals}, Fumbles Enabled: ${enableFumbles}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog(`Processing roll: Critical=${isCritical}, AttackType=${attackType}, DamageType=${damageType}`,this.styling);            
+            debugLog(`Settings -> Criticals Enabled: ${enableCriticals}, Fumbles Enabled: ${enableFumbles}`, this.styling);
             if (isCritical) {
                 if (!enableCriticals) {
-                    this.debugLog("Processing of critical is currently disabled.", `
-                        color: #D01B00;
-                        background-color: #A3A6B4;
-                        font-size:9pt;
-                        font-weight:bold;
-                        padding:1pt;
-                    `);
+                    debugLog("Processing of critical is currently disabled.", this.styling);
                     return;
                 }
                 this.processCritical(attackType, damageType);
             } else {
                 if (!enableFumbles) {
-                    this.debugLog("Processing of fumbles is currently disabled.", `
-                        color: #D01B00;
-                        background-color: #A3A6B4;
-                        font-size:9pt;
-                        font-weight:bold;
-                        padding:1pt;
-                    `);
+                    debugLog("Processing of fumbles is currently disabled.", this.styling);
                     return;
                 }
                 this.processFumble(attackType, damageType);
@@ -129,13 +99,7 @@ export class FatesFolly {
             const typeMap = this.drawingFunctionsMap.get(attackType);
             const drawFunction = typeMap?.get(damageType) || typeMap?.get('default');
             if (drawFunction) {
-                this.debugLog(`Executing critical draw function for ${attackType}/${damageType}`, `
-                    color: #D01B00;
-                    background-color: #A3A6B4;
-                    font-size:9pt;
-                    font-weight:bold;
-                    padding:1pt;
-                `);
+                debugLog(`Executing critical draw function for ${attackType}/${damageType}`, this.styling);
                 drawFunction(true);
             } else {
                 console.warn(`No function found for critical processing with type: ${attackType} and damage type: ${damageType}`);
@@ -156,13 +120,7 @@ export class FatesFolly {
             const typeMap = this.drawingFunctionsMap.get(attackType);
             const drawFunction = typeMap?.get(damageType) || typeMap?.get('default');
             if (drawFunction) {
-                this.debugLog(`Executing fumble draw function for ${attackType}/${damageType}`, `
-                    color: #D01B00;
-                    background-color: #A3A6B4;
-                    font-size:9pt;
-                    font-weight:bold;
-                    padding:1pt;
-                `);
+                debugLog(`Executing fumble draw function for ${attackType}/${damageType}`, this.styling);
                 drawFunction(false);
             } else {
                 console.warn(`No function found for fumble processing with type: ${attackType} and damage type: ${damageType}`);
@@ -179,13 +137,7 @@ export class FatesFolly {
      * @param {boolean} isCritical - Indicates if the roll is a critical hit.
      */
     async handleEffect(resultData, isCritical) {
-        this.debugLog(`HandleEffect called with isCritical = ${isCritical}`, `
-            color: #D01B00;
-            background-color: #A3A6B4;
-            font-size:9pt;
-            font-weight: bold;
-            padding: 1pt;
-        `, resultData);
+        debugLog(`HandleEffect called with isCritical = ${isCritical}`, this.styling, resultData);
         try {
             const targetsArray = Array.from(this.rollWorkflow.targets);
             const targetToken = targetsArray.length > 0 ? targetsArray[0] : null;
@@ -247,13 +199,7 @@ export class FatesFolly {
      * @returns {Object} The converted duration object.
      */
     convertDuration(rawDuration) {
-        this.debugLog(`Converting rawDuration: ${rawDuration}`, `
-            color: #D01B00;
-            background-color: #A3A6B4;
-            font-size:9pt;
-            font-weight:bold;
-            padding:1pt;
-        `);
+        debugLog(`Converting rawDuration: ${rawDuration}`,this.styling);
         if (typeof rawDuration !== 'string') {
             console.error("Invalid rawDuration:", rawDuration);
             return {};
@@ -286,13 +232,7 @@ export class FatesFolly {
         if (specialUnitsSet && 'seconds' in duration) {
             delete duration.seconds;
         }
-        this.debugLog(`Converted Duration:`, `
-            color: #D01B00;
-            background-color: #A3A6B4;
-            font-size:9pt;
-            font-weight: bold;
-            padding: 1pt;
-        `, duration);
+        debugLog(`Converted Duration:`, this.styling, duration);
 
         return duration;
     }
@@ -331,21 +271,9 @@ export class FatesFolly {
             if (!game.user.isGM) return;
             const content = $(message.content);
             const resultDataIds = content.find(".table-result").map((_, el) => $(el).data("result-id")).get();
-            this.debugLog("Extracted Result IDs:", `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight: bold;
-                padding: 1pt;
-            `, resultDataIds);
+            debugLog("Extracted Result IDs:", this.styling, resultDataIds);
             const results = this.findTableResults(resultDataIds);
-            this.debugLog("Table Results Data:", `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight: bold;
-                padding: 1pt;
-            `, results);
+            debugLog("Table Results Data:", this.styling, results);
             if (isCritical || isFumble) {
                 this.createChatButton(results, isCritical);
             }
@@ -361,13 +289,7 @@ export class FatesFolly {
     createChatButton(results, isCritical) {
         const uniqueId = Date.now().toString(36) + Math.random().toString(36).substr(2);
         this.resultDataMap.set(uniqueId, results);
-        this.debugLog(`Chat Button Creation - UniqueId: ${uniqueId}, isCritical: ${isCritical}`, `
-            color: #D01B00;
-            background-color: #A3A6B4;
-            font-size:9pt;
-            font-weight:bold;
-            padding:1pt;
-        `);
+        debugLog(`Chat Button Creation - UniqueId: ${uniqueId}, isCritical: ${isCritical}`, this.styling);
         const buttonTitle = isCritical ? "Apply Critical Effect" : "Apply Fumble Effect";
         const messageContent = `
             <div>
@@ -380,6 +302,8 @@ export class FatesFolly {
             speaker: ChatMessage.getSpeaker(),
             content: messageContent,
             whisper: ChatMessage.getWhisperRecipients("GM").map(u => u.id)
+        }).then(() => {
+            workflowState.isWorkflowInProgress = false; // Reset the flag after chat message is created
         });
     }
 
@@ -390,7 +314,7 @@ export class FatesFolly {
         $(document).off("click.fatesFolly").on("click.fatesFolly", ".fates-folly-button", async (event) => {
             event.preventDefault();
             const button = $(event.currentTarget);
-            const isCriticalString = button.data("is-critical").toString().trim(); // Ensure it's a string and trim whitespace
+            const isCriticalString = button.data("is-critical").toString().trim(); 
             const isCritical = (isCriticalString === "true");
             const resultDataId = button.data("result-id");
             const resultData = this.resultDataMap.get(resultDataId);
@@ -479,13 +403,7 @@ export class FatesFolly {
             const tempHpPath = "system.attributes.hp.temp";
             let currentHp = getProperty(token.actor, hpPath);
             let currentTempHp = getProperty(token.actor, tempHpPath) || 0;
-            this.debugLog(`Current HP: ${currentHp}, Current Temp HP: ${currentTempHp}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog(`Current HP: ${currentHp}, Current Temp HP: ${currentTempHp}`, this.styling);
             let newHp = currentHp;
             let newTempHp = currentTempHp;
             if (damage > 0) {
@@ -499,21 +417,9 @@ export class FatesFolly {
                 const maxHp = getProperty(token.actor, "system.attributes.hp.max");
                 newHp = Math.min(currentHp + Math.abs(Math.round(damage)), maxHp);
             }
-            this.debugLog(`New HP: ${newHp}, New Temp HP: ${newTempHp}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog(`New HP: ${newHp}, New Temp HP: ${newTempHp}`, this.styling);
             token.actor.update({ [tempHpPath]: newTempHp, [hpPath]: newHp });
-            this.debugLog("Actor updated successfully.", `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog("Actor updated successfully.", this.styling);
 
         } catch (error) {
             console.error(`Error applying ${adjustmentType}:`, error);
@@ -544,13 +450,7 @@ export class FatesFolly {
                 this.applyHpAdjustment(token, damageAmount);
                 await this.wait(500);
                 this.sendDamageReport(token, damageAmount);
-                this.debugLog(`Effect applied to ${token.name}. Damage Amount: ${damageAmount}`, `
-                    color: #D01B00;
-                    background-color: #A3A6B4;
-                    font-size:9pt;
-                    font-weight:bold;
-                    padding:1pt;
-                `);
+                debugLog(`Effect applied to ${token.name}. Damage Amount: ${damageAmount}`, this.styling);
             }
         });
     }
@@ -644,13 +544,7 @@ export class FatesFolly {
     async applyItemsToTokens(itemId, rawDuration, ...tokens) {
         const systemItem = await this.findItem(itemId);
         if (!systemItem) {
-            this.debugLog(`Item not found for ID: ${itemId}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog(`Item not found for ID: ${itemId}`, this.styling);
             return;
         }
         let itemData = duplicate(systemItem.data);
@@ -659,13 +553,7 @@ export class FatesFolly {
             const addedItem = await token.actor.createEmbeddedDocuments("Item", [itemData]);
             const addedItemId = addedItem[0].id;
             const addedItemUuid = addedItem[0].uuid;
-            this.debugLog(`Added item to ${token.name}. Item ID: ${addedItemId}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight:bold;
-                padding:1pt;
-            `);
+            debugLog(`Added item to ${token.name}. Item ID: ${addedItemId}`, this.styling);
             const effects = this.applyDaeEffect(rawDuration, addedItemUuid);
             await this.applyItemById(token, addedItemId, effects);
         }
@@ -682,28 +570,10 @@ export class FatesFolly {
         const item = token.actor.items.get(itemId);
         if (item) {
             await token.actor.createEmbeddedDocuments("ActiveEffect", effects);
-            this.debugLog(`Applied effects to ${token.name} for item ID: ${itemId}`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight: bold;
-                padding: 1pt;
-            `, effects);
-            this.debugLog(`**** The End ****`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight: bold;
-                padding: 1pt;
-            `);
+            debugLog(`Applied effects to ${token.name} for item ID: ${itemId}`, this.styling, effects);
+            debugLog(`**** The End ****`, this.styling);
         } else {
-            this.debugLog(`Could not find item with ID ${itemId} on the actor.`, `
-                color: #D01B00;
-                background-color: #A3A6B4;
-                font-size:9pt;
-                font-weight: bold;
-                padding: 1pt;
-            `);
+            debugLog(`Could not find item with ID ${itemId} on the actor.`, this.styling);
         }
     }
 

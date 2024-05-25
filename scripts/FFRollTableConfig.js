@@ -74,7 +74,7 @@ export function unregisterFatesFollyRollTable() {
     const sheet = DocumentSheetConfig._registeredSheets.RollTable["fates-folly"];
     if (sheet) {
         DocumentSheetConfig.unregisterSheet(RollTable, "fates-folly", FatesFollyRollTableConfig);
-        console.log("%cFate\'s Folly Roll Table unregistered.", `
+        console.log("Fate\'s Folly Roll Table unregistered.", `
         color:#D01B00;
         background-color:#A3A6B4;
         font-size:10pt;
@@ -82,7 +82,7 @@ export function unregisterFatesFollyRollTable() {
         padding:5pt;
         `);
     } else {
-        console.log("%cFate\'s Folly Roll Table was not registered.", `
+        console.log("Fate\'s Folly Roll Table was not registered.", `
         color:#D01B00;
         background-color:#A3A6B4;
         font-size:10pt;
