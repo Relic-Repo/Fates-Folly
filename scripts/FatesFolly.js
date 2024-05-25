@@ -33,9 +33,6 @@ export class FatesFolly {
                 ['Piercing', this.drawWeaponPiercing.bind(this)],
                 ['Slashing', this.drawWeaponSlashing.bind(this)],
                 ['Bludgeoning', this.drawWeaponBludgeoning.bind(this)],
-                ['default', this.drawWeapon.bind(this)]
-            ])],
-            ['spell', new Map([
                 ['Acid', this.drawSpellAcid.bind(this)],
                 ['Cold', this.drawSpellCold.bind(this)],
                 ['Fire', this.drawSpellFire.bind(this)],
@@ -45,12 +42,39 @@ export class FatesFolly {
                 ['Poison', this.drawSpellPoison.bind(this)],
                 ['Psychic', this.drawSpellPsychic.bind(this)],
                 ['Radiant', this.drawSpellRadiant.bind(this)],
+                [`Thunder`, this.drawSpellThunder.bind(this)],
+                ['default', this.drawWeapon.bind(this)]
+            ])],
+            ['spell', new Map([
+                ['Piercing', this.drawWeaponPiercing.bind(this)],
+                ['Slashing', this.drawWeaponSlashing.bind(this)],
+                ['Bludgeoning', this.drawWeaponBludgeoning.bind(this)],
+                ['Acid', this.drawSpellAcid.bind(this)],
+                ['Cold', this.drawSpellCold.bind(this)],
+                ['Fire', this.drawSpellFire.bind(this)],
+                ['Force', this.drawSpellForce.bind(this)],
+                ['Lightning', this.drawSpellLightning.bind(this)],
+                ['Necrotic', this.drawSpellNecrotic.bind(this)],
+                ['Poison', this.drawSpellPoison.bind(this)],
+                ['Psychic', this.drawSpellPsychic.bind(this)],
+                ['Radiant', this.drawSpellRadiant.bind(this)],
+                [`Thunder`, this.drawSpellThunder.bind(this)],
                 ['default', this.drawSpell.bind(this)]
             ])],
             ['feat', new Map([
                 ['Piercing', this.drawWeaponPiercing.bind(this)],
                 ['Slashing', this.drawWeaponSlashing.bind(this)],
                 ['Bludgeoning', this.drawWeaponBludgeoning.bind(this)],
+                ['Acid', this.drawSpellAcid.bind(this)],
+                ['Cold', this.drawSpellCold.bind(this)],
+                ['Fire', this.drawSpellFire.bind(this)],
+                ['Force', this.drawSpellForce.bind(this)],
+                ['Lightning', this.drawSpellLightning.bind(this)],
+                ['Necrotic', this.drawSpellNecrotic.bind(this)],
+                ['Poison', this.drawSpellPoison.bind(this)],
+                ['Psychic', this.drawSpellPsychic.bind(this)],
+                ['Radiant', this.drawSpellRadiant.bind(this)],
+                [`Thunder`, this.drawSpellThunder.bind(this)],
                 ['default', this.drawFeat.bind(this)]
             ])]
         ]);
@@ -61,26 +85,37 @@ export class FatesFolly {
      * 
      * @param {boolean} isCritical - Indicates if the roll is a critical hit.
      * @param {string} attackType - The type of attack (e.g., weapon, spell).
-     * @param {string} damageType - The type of damage (e.g., Piercing, Fire).
+     * @param {string} damageTypes - The types of damage (e.g., "Piercing, Fire").
      */
-    processRoll(isCritical, attackType, damageType) {
+    processRoll(isCritical, attackType, damageTypes) {
         try {
             const enableCriticals = game.settings.get("fates-folly", "enableCriticals");
             const enableFumbles = game.settings.get("fates-folly", "enableFumbles");
-            debugLog(`Processing roll: Critical=${isCritical}, AttackType=${attackType}, DamageType=${damageType}`,this.styling);            
+            const criticalDamageTypeChoice = game.settings.get("fates-folly", "criticalDamageTypeChoice");
+            const fumbleDamageTypeChoice = game.settings.get("fates-folly", "fumbleDamageTypeChoice");
+
+            debugLog(`Processing roll: Critical=${isCritical}, AttackType=${attackType}, DamageTypes=${damageTypes}`, this.styling);
             debugLog(`Settings -> Criticals Enabled: ${enableCriticals}, Fumbles Enabled: ${enableFumbles}`, this.styling);
+
+            let damageTypeArray = damageTypes.split(',').map(type => type.trim());
+            let selectedDamageType = "";
+
             if (isCritical) {
                 if (!enableCriticals) {
                     debugLog("Processing of critical is currently disabled.", this.styling);
                     return;
                 }
-                this.processCritical(attackType, damageType);
+                selectedDamageType = this.chooseDamageType(damageTypeArray, criticalDamageTypeChoice);
+                debugLog(`Critical Damage Type=${selectedDamageType}`, this.styling);
+                this.processCritical(attackType, selectedDamageType);
             } else {
                 if (!enableFumbles) {
                     debugLog("Processing of fumbles is currently disabled.", this.styling);
                     return;
                 }
-                this.processFumble(attackType, damageType);
+                selectedDamageType = this.chooseDamageType(damageTypeArray, fumbleDamageTypeChoice);
+                debugLog(`Fumble Damage Type=${selectedDamageType}`, this.styling)
+                this.processFumble(attackType, selectedDamageType);
             }
         } catch (error) {
             console.error("Error in processRoll:", error);
@@ -88,6 +123,25 @@ export class FatesFolly {
         }
     }
 
+    /**
+     * Chooses a damage type based on the user's setting.
+     * 
+     * @param {Array} damageTypeArray - Array of damage types.
+     * @param {string} choice - User's choice for damage type ("first", "second", "last").
+     * @returns {string} - The selected damage type.
+     */
+    chooseDamageType(damageTypeArray, choice) {
+        switch (choice) {
+            case "first":
+                return damageTypeArray[0];
+            case "second":
+                return damageTypeArray[1] || damageTypeArray[0]; // If second doesn't exist, fallback to first
+            case "last":
+                return damageTypeArray[damageTypeArray.length - 1];
+            default:
+                return damageTypeArray[0]; // Default to first if choice is not recognized
+        }
+    }
     /**
      * Processes a critical hit based on the attack and damage types.
      * 
@@ -908,4 +962,24 @@ export class FatesFolly {
             console.error("****Error**** \n in drawSpellRadiant:", error);
         }
     }
+
+    /**
+     * Draws a thunder spell critical or fumble table.
+     * 
+     * @param {boolean} critState - Indicates if the roll is a critical hit.
+     * @param {boolean} fumbState - Indicates if the roll is a fumble.
+     */
+async drawSpellThunder(critState, fumbState) {
+    try {
+        let table = null;
+        if (critState) table = game.tables.getName("Bludgeoning Critical");
+        else table = game.tables.getName("Bludgeoning Fumble");
+        if (!table) return;
+        const currentRollMode = game.settings.get('core', 'rollMode');
+        table.draw({ rollMode: currentRollMode, });
+    } catch (error) {
+        console.error("****Error**** \n in drawSpellThunder:", error);
+    }
 }
+}
+

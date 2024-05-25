@@ -3,7 +3,7 @@
 import { FatesFolly } from "./FatesFolly.js";
 import { debugLog } from "./utils.js";
 
-const workflowState = { isWorkflowInProgress: false }; // Use an object to manage the state
+let workflowState = { isWorkflowInProgress: false }; // Use an object to manage the state
 const styling = `
             color:#D01B00;
             background-color:#A3A6B4;
@@ -12,6 +12,7 @@ const styling = `
             padding:1pt;
         `;
 
+
 /**
  * Handles the completion of a roll workflow.
  * 
@@ -19,7 +20,7 @@ const styling = `
  */
 async function handleRollComplete(workflow) {
     if (workflowState.isWorkflowInProgress) {
-        debugLog("Fate\'s Folly RollComplete Hook Ignored \n **** Workflow in Progress ****", styling, workflow);
+        debugLog("Fate\'s Folly - Third Party \n     RollComplete Hook DETECTED!!      \n     **** Workflow in Progress ****    ", styling, workflow);
         return; 
     }
 

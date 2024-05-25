@@ -30,6 +30,36 @@ export function registerSettings() {
         }
     });
 
+    // Add new settings for choosing damage type
+    game.settings.register(MODULE_ID, "criticalDamageTypeChoice", {
+        name: "Critical Damage Type Choice",
+        hint: "Choose which damage type to use for critical hits: first, second, or last.",
+        scope: "world",
+        config: true,
+        type: String,
+        choices: {
+            "first": "First",
+            "second": "Second",
+            "last": "Last"
+        },
+        default: "first"
+    });
+
+    game.settings.register(MODULE_ID, "fumbleDamageTypeChoice", {
+        name: "Fumble Damage Type Choice",
+        hint: "Choose which damage type to use for fumbles: first, second, or last.",
+        scope: "world",
+        config: true,
+        type: String,
+        choices: {
+            "first": "First",
+            "second": "Second",
+            "last": "Last"
+        },
+        default: "first"
+    });
+
+
     game.settings.register(MODULE_ID, "enableDebug", {
         name: "Enable DEBUG",
         hint: "Turns the Fate's Folly DEBUG on or off. A good deal of console logs.",

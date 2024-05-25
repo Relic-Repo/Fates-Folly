@@ -61,9 +61,9 @@ export function registerFatesFollyRollTable() {
     console.log("%cFate\'s Folly Roll Table registered.", `
     color:#D01B00;
     background-color:#A3A6B4;
-    font-size:10pt;
+    font-size:9pt;
     font-weight:bold;
-    padding:5pt;
+    padding:1pt;
     `);
 }
 
