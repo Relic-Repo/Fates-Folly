@@ -20,13 +20,13 @@ const styling = `
  */
 async function handleRollComplete(workflow) {
     if (workflowState.isWorkflowInProgress) {
-        debugLog("Fate\'s Folly - Third Party \n     RollComplete Hook DETECTED!!      \n     **** Workflow in Progress ****    ", styling, workflow);
+        debugLog("Additonal rollComplete Hook Ignored", styling, workflow);
         return; 
     }
 
     debugLog("Fate\'s Folly RollComplete Hook \n **** The Beginning ****", styling, workflow);
 
-    workflowState.isWorkflowInProgress = true; // Set flag to indicate workflow processing has started
+    workflowState.isWorkflowInProgress = true;
 
     if (!workflow.isCritical && !workflow.isFumble)
         workflowState.isWorkflowInProgress = false;

@@ -576,13 +576,19 @@ export class FatesFolly {
                     priority: 20
                 }],
                 icon: 'modules/fates-folly/img/items/remove.png',
+                isSuppressed: true,
                 origin: `Item.${truncUuid}`,
                 duration: {
                     ...duration,
                     startTime: game.time.worldTime,
                     startRound: game.combat?.round
                 },
-                "flags.dae.stackable": false,
+                flags: {
+                    dae: {
+                      "stackable": "none",
+                      "showIcon": false
+                    }
+                },     
                 description: `Fate's Folly Item Remover for ${itemIdentifier}`,
             }
         ];
@@ -972,8 +978,8 @@ export class FatesFolly {
 async drawSpellThunder(critState, fumbState) {
     try {
         let table = null;
-        if (critState) table = game.tables.getName("Bludgeoning Critical");
-        else table = game.tables.getName("Bludgeoning Fumble");
+        if (critState) table = game.tables.getName("Thunder Critical");
+        else table = game.tables.getName("Thunder Fumble");
         if (!table) return;
         const currentRollMode = game.settings.get('core', 'rollMode');
         table.draw({ rollMode: currentRollMode, });
